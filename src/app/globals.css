@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@theme {
+  --color-primary: #1E3A8A;
+  --color-secondary: #64748B;
+  --color-accent: #F8FAFC;
+  --color-highlight: #3B82F6;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-primary mb-4;
+  }
+  .section-subtitle {
+    @apply text-gray-500 text-lg;
+  }
+}
