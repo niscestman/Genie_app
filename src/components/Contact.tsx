@@ -1,6 +1,6 @@
 'use client'
 import { motion } from 'framer-motion'
-import { Phone, Mail, MapPin, Clock, Send } from 'lucide-react'
+import { Phone, Mail, MapPin, Clock, Send, MessageCircle, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
 const contactInfos = [
@@ -17,7 +17,7 @@ const contactInfos = [
   {
     icon: MapPin,
     title: 'Adresse',
-    lines: ['22 BP 700 Abidjan 22', 'Côte d\'Ivoire'],
+    lines: ['22 BP 700 Abidjan 22', "Côte d'Ivoire"],
   },
   {
     icon: Clock,
@@ -25,6 +25,8 @@ const contactInfos = [
     lines: ['Lundi – Vendredi : 8h00 – 18h00', 'Samedi : 9h00 – 13h00'],
   },
 ]
+
+type Status = 'idle' | 'loading' | 'success' | 'error'
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -34,15 +36,7 @@ export default function Contact() {
     sujet: '',
     message: '',
   })
-  const [submitted, setSubmitted] = useState(false)
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log('Formulaire soumis:', formData)
-    setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 4000)
-    setFormData({ nom: '', email: '', telephone: '', sujet: '', message: '' })
-  }
+  const [status, setStatus] = useState<Status>('idle')
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -50,8 +44,39 @@ export default function Contact() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('loading')
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (!res.ok) throw new Error('Erreur serveur')
+
+      setStatus('success')
+
+      const whatsappMessage = `📩 *Nouveau message via le site*\n\n*Nom :* ${formData.nom}\n*Email :* ${formData.email}\n*Téléphone :* ${formData.telephone || 'Non renseigné'}\n*Sujet :* ${formData.sujet}\n\n*Message :*\n${formData.message}`
+      window.open(
+        `https://wa.me/2250505910997?text=${encodeURIComponent(whatsappMessage)}`,
+        '_blank'
+      )
+
+      setFormData({ nom: '', email: '', telephone: '', sujet: '', message: '' })
+      setTimeout(() => setStatus('idle'), 5000)
+    } catch {
+      setStatus('error')
+      setTimeout(() => setStatus('idle'), 4000)
+    }
+  }
+
+  const inputClass = "w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-700/20 outline-none transition-all text-sm disabled:opacity-60"
+
   return (
-    <section id="contact" className="py-20 bg-white">
+    <section id="contact" style={{ backgroundColor: '#ffffff' }} className="py-20">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -60,15 +85,19 @@ export default function Contact() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <p className="text-highlight uppercase tracking-widest text-sm font-semibold mb-3">Parlons de votre projet</p>
-          <h2 className="section-title">Contactez-nous</h2>
-          <p className="section-subtitle max-w-2xl mx-auto">
+          <p className="uppercase tracking-widest text-sm font-semibold mb-3" style={{ color: '#3B82F6' }}>
+            Parlons de votre projet
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: '#1E3A8A' }}>
+            Contactez-nous
+          </h2>
+          <p className="text-gray-500 text-lg max-w-2xl mx-auto">
             Une question ? Un projet ? Notre équipe est là pour vous répondre.
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Infos */}
+          {/* Infos contact */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -79,13 +108,14 @@ export default function Contact() {
               {contactInfos.map((info) => (
                 <div
                   key={info.title}
-                  className="flex items-start gap-4 p-4 bg-accent rounded-xl border border-gray-100 hover:border-primary/20 hover:shadow-sm transition-all"
+                  className="flex items-start gap-4 p-4 rounded-xl border border-gray-100 hover:shadow-sm transition-all"
+                  style={{ backgroundColor: '#F8FAFC' }}
                 >
-                  <div className="p-3 bg-primary/10 rounded-lg shrink-0">
-                    <info.icon className="text-primary" size={20} />
+                  <div className="p-3 rounded-lg shrink-0" style={{ backgroundColor: '#EFF6FF' }}>
+                    <info.icon style={{ color: '#1E3A8A' }} size={20} />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-800 text-sm mb-1">{info.title}</h4>
+                    <h4 className="font-semibold text-sm mb-1" style={{ color: '#1E3A8A' }}>{info.title}</h4>
                     {info.lines.map((line) => (
                       <p key={line} className="text-gray-500 text-sm">{line}</p>
                     ))}
@@ -94,9 +124,21 @@ export default function Contact() {
               ))}
             </div>
 
-            {/* Légal */}
-            <div className="p-5 bg-primary/5 rounded-xl border border-primary/10">
-              <h4 className="font-semibold text-primary text-sm mb-2">Informations légales</h4>
+            <a
+              href={`https://wa.me/2250505910997?text=${encodeURIComponent(
+                "Bonjour Génie Corporation, je souhaite obtenir plus d'informations sur vos services."
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-3 w-full text-white py-3 rounded-xl font-semibold text-sm transition-colors shadow-md mb-4"
+              style={{ backgroundColor: '#22C55E' }}
+            >
+              <MessageCircle size={20} />
+              Écrire directement sur WhatsApp
+            </a>
+
+            <div className="p-2 rounded-xl border border-blue-100" style={{ backgroundColor: '#EFF6FF' }}>
+              <h4 className="font-semibold text-sm mb-2" style={{ color: '#1E3A8A' }}>Informations légales</h4>
               <p className="text-xs text-gray-500">SARL au capital de 5 000 000 FCFA</p>
               <p className="text-xs text-gray-500">RCCM : 1-ABJ-2018-B-33578</p>
               <p className="text-xs text-gray-500">NCC : 1870182W</p>
@@ -110,16 +152,32 @@ export default function Contact() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <form onSubmit={handleSubmit} className="bg-accent p-8 rounded-2xl border border-gray-100 shadow-sm">
-              <h3 className="text-xl font-bold text-primary mb-6">Envoyez-nous un message</h3>
+            <form
+              onSubmit={handleSubmit}
+              className="p-8 rounded-2xl border border-gray-100 shadow-sm"
+              style={{ backgroundColor: '#F8FAFC' }}
+            >
+              <h3 className="text-xl font-bold mb-6" style={{ color: '#1E3A8A' }}>
+                Envoyez-nous un message
+              </h3>
 
-              {submitted && (
+              {status === 'success' && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm font-medium"
                 >
-                  ✓ Message envoyé avec succès ! Nous vous répondrons sous 24h.
+                  ✅ Message envoyé ! Confirmation par email envoyée. WhatsApp s&apos;ouvre pour notifier l&apos;équipe.
+                </motion.div>
+              )}
+
+              {status === 'error' && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-medium"
+                >
+                  ❌ Une erreur s&apos;est produite. Réessayez ou contactez-nous via WhatsApp.
                 </motion.div>
               )}
 
@@ -134,7 +192,8 @@ export default function Contact() {
                     value={formData.nom}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                    disabled={status === 'loading'}
+                    className={inputClass}
                     placeholder="Votre nom complet"
                   />
                 </div>
@@ -150,7 +209,8 @@ export default function Contact() {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                      disabled={status === 'loading'}
+                      className={inputClass}
                       placeholder="votre@email.com"
                     />
                   </div>
@@ -163,7 +223,8 @@ export default function Contact() {
                       name="telephone"
                       value={formData.telephone}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                      disabled={status === 'loading'}
+                      className={inputClass}
                       placeholder="+225 XX XX XX XX"
                     />
                   </div>
@@ -178,14 +239,15 @@ export default function Contact() {
                     value={formData.sujet}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                    disabled={status === 'loading'}
+                    className={inputClass}
                   >
                     <option value="">Sélectionnez un sujet</option>
-                    <option value="devis">Demande de devis</option>
-                    <option value="information">Information sur un service</option>
-                    <option value="formation">Inscription formation</option>
-                    <option value="partenariat">Partenariat</option>
-                    <option value="autre">Autre</option>
+                    <option value="Demande de devis">Demande de devis</option>
+                    <option value="Information sur un service">Information sur un service</option>
+                    <option value="Inscription formation">Inscription formation</option>
+                    <option value="Partenariat">Partenariat</option>
+                    <option value="Autre">Autre</option>
                   </select>
                 </div>
 
@@ -199,20 +261,36 @@ export default function Contact() {
                     onChange={handleChange}
                     required
                     rows={5}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none text-sm"
+                    disabled={status === 'loading'}
+                    className={inputClass + ' resize-none'}
                     placeholder="Décrivez votre projet ou votre demande..."
                   />
                 </div>
 
                 <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
+                  whileHover={{ scale: status === 'loading' ? 1 : 1.01 }}
+                  whileTap={{ scale: status === 'loading' ? 1 : 0.99 }}
                   type="submit"
-                  className="w-full bg-primary text-white px-6 py-4 rounded-lg font-semibold text-sm hover:bg-blue-800 transition-colors flex items-center justify-center gap-2 shadow-md"
+                  disabled={status === 'loading'}
+                  className="w-full text-white px-6 py-4 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#1E3A8A' }}
                 >
-                  <Send size={16} />
-                  Envoyer le message
+                  {status === 'loading' ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={16} />
+                      Envoyer le message
+                    </>
+                  )}
                 </motion.button>
+
+                <p className="text-center text-xs text-gray-400">
+                  Après envoi, WhatsApp s&apos;ouvrira automatiquement pour notifier notre équipe.
+                </p>
               </div>
             </form>
           </motion.div>
