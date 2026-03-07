@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     // Email à Génie Corporation
     await resend.emails.send({
-      from: 'Génie Corporation <onboarding@resend.dev>',
+      from: 'Génie Corporation <noreply@geniecorporations.com>',
       to: 'nucfion01@gmail.com',
       replyTo: email,
       subject: `📩 Nouveau message – ${sujet}`,
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
 
     // Email de confirmation au client
     await resend.emails.send({
-      from: 'Génie Corporation <onboarding@resend.dev>',
+      from: 'Génie Corporation <noreply@geniecorporations.com>',
       to: email,
       subject: '✅ Nous avons bien reçu votre message',
       html: `
