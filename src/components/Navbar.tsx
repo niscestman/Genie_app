@@ -43,7 +43,7 @@ export default function Navbar() {
             </span>
             <span className="flex items-center gap-2 text-blue-200">
               <Mail size={14} />
-              nucfion01@gmail.com
+              info@geniecorporations.com
             </span>
           </div>
           <span className="text-blue-200 text-xs">Lun–Ven 8h–18h · Sam 9h–13h</span>
