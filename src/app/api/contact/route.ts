@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     // Email à Génie Corporation
     await resend.emails.send({
       from: 'Génie Corporation <noreply@geniecorporations.com>',
-      to: 'nucfion01@gmail.com',
+      to: 'info@geniecorporations.com',
       replyTo: email,
       subject: `📩 Nouveau message – ${sujet}`,
       html: `
