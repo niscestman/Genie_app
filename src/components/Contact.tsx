@@ -12,7 +12,7 @@ const contactInfos = [
   {
     icon: Mail,
     title: 'Email',
-    lines: ['nucfion01@gmail.com'],
+    lines: ['info@geniecorporations.com'],
   },
   {
     icon: MapPin,
